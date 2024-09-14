@@ -1,0 +1,65 @@
+services:
+  gateway:
+    build: ./gateway
+    image: gateway-image
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - authorization
+      - central
+    environment:
+      - AUTH_SERVICE_URL=http://authorization:9090/
+      - CENTRAL_SERVICE_URL=http://central:7070/
+
+  authorization:
+    build: ./authorization
+    image: ozon-hub
+    container_name: authorization
+    ports:
+      - "9090:9090"
+    depends_on:
+      - authorization-base
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://authorization-db:5432/ozondb
+      - SPRING_DATASOURCE_USERNAME=Faruh
+      - SPRING_DATASOURCE_PASSWORD=iamroot
+
+  central:
+    build: ./central
+    image: central-image
+    container_name: central-ewmdb
+    ports:
+      - "7070:7070"
+    depends_on:
+      - ewm-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewmdb
+      - SPRING_DATASOURCE_USERNAME=test
+      - SPRING_DATASOURCE_PASSWORD=test
+
+
+
+  authorization-base:
+    image: postgres:16-alpine
+    container_name: authorization-db
+    ports:
+      - "6541:5432"
+    environment:
+      - POSTGRES_DB=ozondb
+      - POSTGRES_USER=Faruh
+      - POSTGRES_PASSWORD=iamroot
+
+  ewm-db:
+    image: postgres:16-alpine
+    container_name: ewmdb-main
+    ports:
+      - "6544:5432"
+    environment:
+      - POSTGRES_DB=ewmdb
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+
+networks:
+  app-network:
+    driver: bridge
